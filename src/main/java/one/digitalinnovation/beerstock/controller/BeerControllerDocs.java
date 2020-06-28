@@ -1,5 +1,11 @@
 package one.digitalinnovation.beerstock.controller;
 
+import java.util.List;
+
+import javax.validation.Valid;
+
+import org.springframework.web.bind.annotation.PathVariable;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -9,11 +15,7 @@ import one.digitalinnovation.beerstock.dto.QuantityDTO;
 import one.digitalinnovation.beerstock.exception.BeerAlreadyRegisteredException;
 import one.digitalinnovation.beerstock.exception.BeerNotFoundException;
 import one.digitalinnovation.beerstock.exception.BeerStockExceededException;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-
-import javax.validation.Valid;
-import java.util.List;
+import one.digitalinnovation.beerstock.exception.BeerWithInsufficientStockException;
 
 @Api("Manages beer stock")
 public interface BeerControllerDocs {
@@ -44,4 +46,22 @@ public interface BeerControllerDocs {
             @ApiResponse(code = 404, message = "Beer with given id not found.")
     })
     void deleteById(@PathVariable Long id) throws BeerNotFoundException;
+
+    @ApiOperation(value = "Increment beer by a given id and quantity in stock")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Success beer incremented in stock"),
+            @ApiResponse(code = 400, message = "Beer not successfully increment in stock"),
+            @ApiResponse(code = 404, message = "Beer with given id not found.")
+    })    
+    BeerDTO increment(Long id, @Valid QuantityDTO quantityDTO) throws BeerNotFoundException, BeerStockExceededException;
+
+    @ApiOperation(value = "Decrement beer by a given id and quantity in stock")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Success beer decremented in stock"),
+            @ApiResponse(code = 400, message = "Beer not successfully decrement in stock"),
+            @ApiResponse(code = 404, message = "Beer with given id not found.")
+    })    
+    BeerDTO decrement(Long id, @Valid QuantityDTO quantityDTO)
+	    throws BeerNotFoundException, BeerStockExceededException, BeerWithInsufficientStockException;
+
 }

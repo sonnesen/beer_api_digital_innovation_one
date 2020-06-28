@@ -1,22 +1,23 @@
 package one.digitalinnovation.beerstock.service;
 
-import lombok.AllArgsConstructor;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
 import one.digitalinnovation.beerstock.dto.BeerDTO;
 import one.digitalinnovation.beerstock.entity.Beer;
 import one.digitalinnovation.beerstock.exception.BeerAlreadyRegisteredException;
 import one.digitalinnovation.beerstock.exception.BeerNotFoundException;
 import one.digitalinnovation.beerstock.exception.BeerStockExceededException;
+import one.digitalinnovation.beerstock.exception.BeerWithInsufficientStockException;
 import one.digitalinnovation.beerstock.mapper.BeerMapper;
 import one.digitalinnovation.beerstock.repository.BeerRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor
 public class BeerService {
 
     private final BeerRepository beerRepository;
@@ -68,5 +69,17 @@ public class BeerService {
             return beerMapper.toDTO(incrementedBeerStock);
         }
         throw new BeerStockExceededException(id, quantityToIncrement);
+    }
+
+    public BeerDTO decrement(Long id, int quantityToDecrement) throws BeerNotFoundException, BeerWithInsufficientStockException {
+	Beer beerToDecrementStock = verifyIfExists(id);
+	int quantityInStock = beerToDecrementStock.getQuantity();
+	int quantityAfterDecrement = quantityInStock - quantityToDecrement;
+	if (quantityAfterDecrement >= 0) {	
+	    beerToDecrementStock.setQuantity(quantityInStock - quantityToDecrement);
+	    Beer decrementedBeerStock = beerRepository.save(beerToDecrementStock);
+	    return beerMapper.toDTO(decrementedBeerStock);
+	}
+	throw new BeerWithInsufficientStockException(id, quantityInStock, quantityToDecrement);
     }
 }
